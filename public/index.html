@@ -3,63 +3,164 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
-
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/6.4.0/firebase-app.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/6.4.0/firebase-auth.js"></script>
-    <script defer src="/__/firebase/6.4.0/firebase-database.js"></script>
-    <script defer src="/__/firebase/6.4.0/firebase-messaging.js"></script>
-    <script defer src="/__/firebase/6.4.0/firebase-storage.js"></script>
-    <!-- initialize the SDK after all desired features are loaded -->
-    <script defer src="/__/firebase/init.js"></script>
-
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
-      }
-    </style>
+    <title>WEB CHECKER</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   </head>
+
   <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+    <div class="container">
+      <h1>スケジュール一覧</h1>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>スケジュール</th>
+            <th>タイトル</th>
+            <th>URL</th>
+            <th>セレクタ</th>
+            <th>編集</th>
+            <th>詳細</th>
+          </tr>
+        </thead>
+
+        <tbody id="create">
+          <tr>
+            <td><input type="text" class="form-control schedule" placeholder="* * * * *"></input><small class="form-text text-muted"><a href="https://crontab.guru" target="_BLANK">crontab 形式</a>。分は無視されます。</small></td>
+            <td><input type="text" class="form-control title"></input></td>
+            <td><input type="text" class="form-control uri" placeholder="https://"></input></td>
+            <td><input type="text" class="form-control selector" placeholder="#hoge, .bar:nth-child(3)"><small class="form-text text-muted">CSS3 Selector 形式。</small></td>
+            <td><button id="create-button" class="btn btn-primary">新規追加</button></td>
+        </tbody>
+
+        <tbody id="records">
+        </tbody>
+      </table>
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
 
+    <div id="loading" class="text-center" style="display: none; position: absolute; left: 50%; top: 30%;">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/6.4.0/firebase.js"></script>
+    <script src="./javascripts/config.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+     const db = firebase.firestore();
+     $('#loading').fadeIn(0);
+     db.collection('schedules').orderBy('createdAt', 'desc').limit(10).get().then(doc => { doc.forEach(schedule => {
+       const id = schedule.id;
+       const scheduleDom = $(`
+<tr id="${id}">
+  <td><input type="text" class="form-control schedule" readonly="readonly" value="${schedule.data().schedule}" data-value="${schedule.data().schedule}"></input>
+  <td><input type="text" class="form-control title"    readonly="readonly" value="${schedule.data().title}"    data-value="${schedule.data().title}"></input></td>
+  <td><input type="text" class="form-control uri"      readonly="readonly" value="${schedule.data().uri}"      data-value="${schedule.data().uri}"></input></td>
+  <td><input type="text" class="form-control selector" readonly="readonly" value="${schedule.data().selector}" data-value="${schedule.data().selector}"></input></td>
+  <td><button id="edit-${schedule.id}"   class="edit   btn btn-primary" data-id="${schedule.id}">編集</button>
+      <button id="save-${schedule.id}"   class="save   btn btn-primary" data-id="${schedule.id}">保存</button>
+      <button id="cancel-${schedule.id}" class="cancel btn btn-light"   data-id="${schedule.id}">x</button>
+      <button id="delete-${schedule.id}" class="delete btn btn-danger"  data-id="${schedule.id}">削除</button></td>
+  <td><a href="./detail.html?scheduleId=${schedule.id}" class="btn btn-link" role="button">履歴</a></td>
+</tr>`)
+       $('#records').append(scheduleDom);
+       $('.save').hide();
+       $('.cancel').hide();
+       $('#loading').fadeOut();
 
-        try {
-          let app = firebase.app();
-          let features = ['auth', 'database', 'messaging', 'storage'].filter(feature => typeof app[feature] === 'function');
-          document.getElementById('load').innerHTML = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          document.getElementById('load').innerHTML = 'Error loading the Firebase SDK, check the console.';
-        }
-      });
+       $(`#edit-${id}`).on('click', (event) => {
+         $(`#${id} input`).prop('readonly', false);
+         $(`.edit:not(#edit-${id})`).prop('disabled', true);
+         $(`#edit-${id}`).hide();
+         $(`#save-${id}`).show();
+         $('.delete').hide();
+         $(`#cancel-${id}`).show();
+       });
+
+       $(`#save-${id}`).on('click', (event) => {
+         $('#loading').show().fadeIn();
+
+         db.collection('schedules').doc(id).set({
+           schedule: $(`#${id} .schedule`).val(),
+           uri: $(`#${id} .uri`).val(),
+           title: $(`#${id} .title`).val(),
+           selector: $(`#${id} .selector`).val()
+         }, { merge: true }).then(() => {
+           $(`#${id} .schedule`).data('value', $(`#${id} .schedule`).val()),
+           $(`#${id} .title`).data('value', $(`#${id} .title`).val()),
+           $(`#${id} .uri`).data('value', $(`#${id} .uri`).val()),
+           $(`#${id} .selector`).data('value', $(`#${id} .selector`).val()),
+
+           $(`#${id} input`).prop('readonly', true);
+           $(`button.edit`).prop('disabled', false);
+           $(`#save-${id}`).hide();
+           $(`#edit-${id}`).show();
+           $('.delete').show();
+           $(`#cancel-${id}`).hide();
+
+           $('#loading').fadeOut(0);
+         }).catch(err => {
+           console.error(err);
+           alert(err);
+         });
+       });
+
+       $(`#cancel-${id}`).on('click', (event) => {
+         $(`#${id} input`).prop('readonly', true)
+                          .each((i, dom) => { $(dom).val($(dom).data('value')); });
+         $(`button.edit`).prop('disabled', false);
+         $(`#save-${id}`).hide();
+         $(`#edit-${id}`).show();
+         $('.delete').show();
+         $(`#cancel-${id}`).hide();
+       });
+
+       $(`#delete-${id}`).on('click', (event) => {
+         if(!confirm('本当に削除しますか？')) { return; }
+
+         $('#loading').show().fadeIn();
+         db.collection('schedules').doc(id).delete().then(() => {
+           $('#loading').fadeOut(0);
+           alert('削除されました');
+           $(`#${id}`).remove();
+         }).catch(err => {
+           console.error(err);
+           alert(err);
+         });
+       });
+     });
+
+       $(`#create-button`).on('click', (event) => {
+         $('#loading').show().fadeIn();
+
+         const _schedule = $('#create .schedule').val();
+         const _uri = $('#create .uri').val();
+         const _title = $('#create .title').val();
+         const _selector = $('#create .selector').val();
+
+         if(!(_schedule.match(/^.*\s.*\s.*\s.*\s.*$/) && _title && _uri.match(/^http(s)?:\/\/.+$/) && _selector)) {
+           $('#loading').show().fadeOut();
+           alert('すべての項目を入力してください');
+           return;
+         }
+
+         db.collection('schedules').add({
+           schedule: _schedule,
+           uri: _uri,
+           title: _title,
+           selector: _selector,
+           createdAt: +new Date(),
+           checkedAt: +new Date()
+         }).then(() => {
+           location.href = 'index.html';
+           $('#loading').fadeOut(0);
+         }).catch(err => {
+           console.error(err);
+           alert(err);
+         });
+       });
+
+     });
     </script>
   </body>
 </html>

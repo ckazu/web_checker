@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WEB CHECKER - 更新履歴</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>更新履歴</h1>
+      <div id="records"></div>
+    </div>
+
+    <div id="loading" class="text-center" style="display: none; position: absolute; left: 50%; top: 30%;">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/6.4.0/firebase.js"></script>
+    <script src="./javascripts/config.js"></script>
+    <script>
+     $('#loading').fadeIn(0);
+     const db = firebase.firestore();
+     const scheduleId = location.search.match(/scheduleId=(.*)&*/)[1];
+     db.collection('schedules').doc(scheduleId).collection('archives').orderBy('time', 'desc').get().then(doc => { doc.forEach(archive => {
+       $('#loading').fadeOut();
+       $('#records').append($(`<dev class="card">
+<div class="card-body">
+  <h3 class="card-title">${new Date(archive.data().time)}</h3>
+  <p class="card-text">${archive.data().content}</p>
+  <a href="index.html" class="btn btn-link" role="button"><a href="index.html">戻る</a>
+</div>`));
+     });
+     });
+    </script>
+  </body>
+</html>
