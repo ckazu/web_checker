@@ -1,8 +1,17 @@
+const admin = require('firebase-admin');
+admin.initializeApp();
+const firestore = admin.firestore();
 const functions = require('firebase-functions');
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//  response.send("Hello from Firebase!");
-// });
+const webCrawlerLib = require('./webCrawler');
+const webFetcherLib = require('./webFetcher');
+
+exports.webCrawler = functions.https.onRequest(async (req, res) => {
+  const scheduleId = req.body.scheduleId;
+  await webCrawlerLib(firestore, functions, scheduleId);
+  res.send('ok');
+});
+
+exports.webFetcher = functions.pubsub.schedule('5 * * * *').onRun(async (context) => {
+  await webFetcherLib(firestore);
+});

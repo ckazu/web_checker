@@ -16,7 +16,11 @@ const crawler = async (uri, selector, fetchAsHtml) => {
   try {
     const $ = await rp(options);
     if(fetchAsHtml) { return $(selector).html(); }
-    else            { return $(selector).text(); }
+    else            {
+      var ret = [];
+      $(selector).map((i, dom) => { ret.push($(dom).text()); });
+      return ret.join("\n");
+    }
   } catch (err) {
     console.error(err);
     throw err;
