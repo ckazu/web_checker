@@ -11,6 +11,9 @@
       "**/node_modules/**"
     ]
   },
+  "functions": {
+    "source": "./functions"
+  },
   "emulators": {
     "firestore": {
       "port": 8808
