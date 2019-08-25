@@ -3,24 +3,23 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ログイン</title>
+    <title>WEB CHECKER</title>
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   </head>
 
   <body>
-    <h1>ログイン</h1>
-    <div id="firebaseui-auth-container"></div>
+    <h1>ログアウト</h1>
     <script src="https://www.gstatic.com/firebasejs/6.4.0/firebase.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/ui/4.1.0/firebase-ui-auth__ja.js"></script>
-    <script src="/javascripts/config.js"></script>
+    <script src="./javascripts/config.js"></script>
     <script>
-     const uiConfig = {
-       signInSuccessUrl: '/index.html',
-       signInOptions: [{ provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID }],
-     };
-     const ui = new firebaseui.auth.AuthUI(firebase.auth());
-     ui.start('#firebaseui-auth-container', uiConfig);
+     firebase.auth().onAuthStateChanged(user => {
+       firebase.auth().signOut().then(()=>{
+         console.log("ログアウトしました");
+       }).catch( (error)=>{
+         console.log(`ログアウト時にエラーが発生しました (${error})`);
+       });
+     });
     </script>
   </body>
 </html>
