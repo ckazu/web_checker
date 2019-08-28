@@ -2,6 +2,7 @@ const cheerio = require('cheerio');
 const rp = require('request-promise');
 
 const crawler = async (uri, selector, fetchAsHtml) => {
+  console.log('crawl: ', uri);
   // todo: validation
   if(typeof uri === 'undefined' || uri === null) { throw new Error('invalid URI'); }
   if(typeof selector === 'undefined' || selector === null) { selector = 'body'; }
@@ -15,11 +16,12 @@ const crawler = async (uri, selector, fetchAsHtml) => {
 
   try {
     const $ = await rp(options);
-    if(fetchAsHtml) { return $(selector).html(); }
-    else            {
-      var ret = [];
-      $(selector).map((i, dom) => { ret.push($(dom).text()); });
-      return ret.join("\n");
+    if(fetchAsHtml) {
+      return $(selector).html();
+    } else {
+      var result = [];
+      $(selector).map((i, dom) => { result.push($(dom).text()); });
+      return result.join("\n");
     }
   } catch (err) {
     console.error(err);
