@@ -1,3 +1,7 @@
+# firebase
+.firebase
+.firebaserc
+
 # Logs
 logs
 *.log
