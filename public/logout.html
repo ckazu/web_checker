@@ -10,8 +10,10 @@
 
   <body>
     <h1>ログアウト</h1>
-    <script src="https://www.gstatic.com/firebasejs/6.4.0/firebase.js"></script>
-    <script src="./javascripts/config.js"></script>
+    <script src="/__/firebase/6.4.2/firebase-app.js"></script>
+    <script src="/__/firebase/6.4.2/firebase-auth.js"></script>
+    <script src="/__/firebase/ui/4.1.0/firebase-ui-auth__ja.js"></script>
+    <script src="/__/firebase/init.js"></script>
     <script>
      firebase.auth().onAuthStateChanged(user => {
        firebase.auth().signOut().then(()=>{
