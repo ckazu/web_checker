@@ -45,10 +45,17 @@ module.exports = webCrawlerLib;
 
 // todo: classify arguments
 const slackFormat = (schedule, time, latestTime, text, diff) => {
+  let titleText;
+  if(latestTime == '-') {
+    titleText = `[${schedule.title}] が新規追加されました`;
+  } else {
+    titleText = `[${schedule.title}] で更新が検知されました`;
+  }
+
   return {
     attachments: [
       {
-        title: `[${schedule.title}] で更新が検知されました`,
+        title: titleText,
         title_link: schedule.uri,
         color: 'good',
         fields: [
