@@ -61,7 +61,7 @@
     <script>
      const db = firebase.firestore();
      $('#loading').fadeIn(0);
-     db.collection('schedules').orderBy('createdAt', 'desc').limit(10).get().then(doc => { doc.forEach(schedule => {
+     db.collection('schedules').orderBy('createdAt', 'desc').get().then(doc => { doc.forEach(schedule => {
        const id = schedule.id;
        const scheduleDom = $(`
 <tr id="${id}">
