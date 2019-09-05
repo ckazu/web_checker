@@ -1,5 +1,6 @@
 const rp = require('request-promise');
 const moment = require('moment-timezone');
+const cheerio = require('cheerio');
 const crawler = require('./lib/crawler');
 const slackDiff = require('./lib/slack_diff');
 
@@ -12,7 +13,7 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId) => {
   console.log('crawlerLib: ', schedule.title);
 
   let before = +new Date;
-  let text = await crawler(encodeURI(schedule.uri), schedule.selector);
+  let text = await crawler(encodeURI(schedule.uri), schedule.selector, true);
 
   text = text.replace(/\t+\n/g, '\n').replace(/\s+/g, ' \n').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
 
@@ -33,7 +34,7 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId) => {
 
     await firestore.collection(`schedules/${scheduleDoc.id}/archives`).add({ content: text, time: +time });
 
-    const data = JSON.stringify(slackFormat(schedule, time, latestTime, text, diff));
+    const data = JSON.stringify(slackFormat(schedule, time, latestTime, cheerio.load(text).text(), diff));
     const dataBuffer = Buffer.from(data);
     await pubsub.topic('slackNotifier').publish(dataBuffer);
     console.log('publish slackNotifier: ', schedule.title);
