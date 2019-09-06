@@ -23,7 +23,7 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId) => {
   latestArchiveSnapshot.forEach(archive => { latestArchive = archive.data(); });
 
   let diff;
-  if(latestArchive) { diff = slackDiff(text, latestArchive.content, 'words'); }
+  if(latestArchive) { diff = slackDiff(text, latestArchive.content, 'lines'); }
 
   if(diff == '') {
     console.log('no diff: ', schedule.title);
