@@ -34,7 +34,8 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId) => {
 
     await firestore.collection(`schedules/${scheduleDoc.id}/archives`).add({ content: text, time: +time });
 
-    const data = JSON.stringify(slackFormat(schedule, time, latestTime, cheerio.load(text).text(), diff));
+    const diffDisplay = slackDiff(cheerio.load(text).text(), cheerio.load(latestArchive.content).text(), 'lines');
+    const data = JSON.stringify(slackFormat(schedule, time, latestTime, cheerio.load(text).text(), diffDisplay));
     const dataBuffer = Buffer.from(data);
     await pubsub.topic('slackNotifier').publish(dataBuffer);
     console.log('publish slackNotifier: ', schedule.title);
