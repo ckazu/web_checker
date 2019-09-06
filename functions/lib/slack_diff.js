@@ -25,7 +25,7 @@ const slackDiff = (newStr, oldStr, mode) => {
       if(d.added) {
         diffStr += `+ ${d.value.trim().replace(/\n/g, '\n  ')}\n`;
       } else if (d.removed) {
-        diffStr += `- ~${d.value.trim().replace(/\n/g, '~\n  ~')}~\n`;
+        diffStr += `- ~${d.value.trim().replace(/\s*\n/g, '~\n  ~')}~\n`;
       }
     }
   });
