@@ -1,4 +1,4 @@
-const slackDiff = require('../slack_diff');
+const slackDiff = require('../lib/slack_diff');
 
 test('slackDiff', () => {
   expect(slackDiff('new text', 'old text')).toBe('- ~old text~\n+ new text\n');

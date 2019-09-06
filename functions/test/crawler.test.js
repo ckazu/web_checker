@@ -1,4 +1,4 @@
-const crawler = require('../crawler');
+const crawler = require('../lib/crawler');
 
 // todo: mock
 test('crawler', async () => {
