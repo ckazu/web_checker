@@ -48,8 +48,13 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId, hostingUrl) => {
 
     await firestore.collection(`schedules/${scheduleDoc.id}/archives`).add({ content: text, time: +time });
 
-    const diffDisplay = slackDiff(cheerio.load(text).text(), cheerio.load(latestArchive.content).text(), 'lines');
-    const data = JSON.stringify(slackFormat(schedule, time, latestTime, cheerio.load(text).text(), diffDisplay));
+    let content = '';
+    if(latestArchive) { content = latestArchive.content; }
+    const newContent = cheerio.load(text).text().replace(/\t+\n/g, '\n').replace(/\s+/g, ' ').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
+    const oldContent = cheerio.load(content).text().replace(/\t+\n/g, '\n').replace(/\s+/g, ' ').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
+
+    const diffDisplay = slackDiff(newContent, oldContent, 'lines');
+    const data = JSON.stringify(slackFormat(hostingUrl, scheduleId, schedule, time, latestTime, newContent, diffDisplay));
     const dataBuffer = Buffer.from(data);
     await pubsub.topic('slackNotifier').publish(dataBuffer);
     console.log('publish slackNotifier: ', schedule.title);
