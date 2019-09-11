@@ -5,7 +5,7 @@ const crawler = require('./lib/crawler');
 const slackDiff = require('./lib/slack_diff');
 
 // todo: refactor
-const webCrawlerLib = async (firestore, pubsub, scheduleId) => {
+const webCrawlerLib = async (firestore, pubsub, scheduleId, hostingUrl) => {
   const scheduleRef = await firestore.doc(`schedules/${scheduleId}`);
   const scheduleDoc = await scheduleRef.get();
   const schedule = scheduleDoc.data();
@@ -14,8 +14,22 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId) => {
 
   let before = +new Date;
   let text = await crawler(encodeURI(schedule.uri), schedule.selector, true);
-
-  text = text.replace(/\t+\n/g, '\n').replace(/\s+/g, ' \n').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
+  if(text === null && (new Date().getHours() == 10)) {
+    const _data = JSON.stringify({
+      attachments: [
+        { title: `[${schedule.title}] でコンテンツが存在しませんでした`,
+          title_link: schedule.uri,
+          color: 'danger',
+          fields: [
+            { title: 'URL', value: schedule.uri },
+            { title: 'セレクタ', value: `\`${schedule.selector}\`` },
+            { title: '管理ページ', value: hostingUrl }
+          ]
+        }]
+    });
+    const _dataBuffer = Buffer.from(_data);
+    return await pubsub.topic('slackNotifier').publish(_dataBuffer);
+  }
 
   const latestArchiveSnapshot = await firestore.collection(`schedules/${scheduleDoc.id}/archives`).orderBy('time', 'desc').limit(1).get();
 
@@ -46,7 +60,7 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId) => {
 module.exports = webCrawlerLib;
 
 // todo: classify arguments
-const slackFormat = (schedule, time, latestTime, text, diff) => {
+const slackFormat = (hostingUrl, scheduleId, schedule, time, latestTime, text, diff) => {
   let titleText;
   if(latestTime == '-') {
     titleText = `[${schedule.title}] が新規追加されました`;
@@ -62,7 +76,9 @@ const slackFormat = (schedule, time, latestTime, text, diff) => {
         color: 'good',
         fields: [
           { title: '更新検知日時', value: moment(time).tz('Asia/Tokyo').format(), short: true },
-          { title: '前回の更新日時', value: latestTime, short: true }
+          { title: '前回の更新日時', value: latestTime, short: true },
+          { title: '差分一覧', value: `${hostingUrl}/detail.html?scheduleId=${scheduleId}` }
+
         ]
       }, {
         fields: [

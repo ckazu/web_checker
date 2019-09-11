@@ -5,6 +5,8 @@ const functions = require('firebase-functions');
 const { PubSub } = require('@google-cloud/pubsub');
 const pubsub = new PubSub();
 
+const HOSTING_URL = functions.config().hosting_url || `https://${JSON.parse(process.env.FIREBASE_CONFIG).projectId}.firebaseapp.com`;
+
 const IncomingWebhook = require('@slack/client').IncomingWebhook;
 const slack = new IncomingWebhook(functions.config().slack.url);
 
@@ -19,7 +21,7 @@ exports.webFetcher = functions.pubsub.schedule('5 * * * *').onRun(async (context
 
 exports.webCrawler = functions.pubsub.topic('webChecker').onPublish(async (message) => {
   const scheduleId = message.json.scheduleId;
-  await webCrawlerLib(firestore, pubsub, scheduleId);
+  await webCrawlerLib(firestore, pubsub, scheduleId, HOSTING_URL);
 });
 
 exports.slackNotifier = functions.pubsub.topic('slackNotifier').onPublish(async (message) => {
