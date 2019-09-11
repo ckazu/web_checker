@@ -50,8 +50,14 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId, hostingUrl) => {
 
     let content = '';
     if(latestArchive) { content = latestArchive.content; }
-    const newContent = cheerio.load(text).text().replace(/\t+\n/g, '\n').replace(/\s+/g, ' ').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
-    const oldContent = cheerio.load(content).text().replace(/\t+\n/g, '\n').replace(/\s+/g, ' ').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
+    const newContent = cheerio
+          .load(text.replace(/<\/(.*?)>/g, '</$1>\n').replace(/<br??>/g, '<br>\n'))
+          .text()
+          .replace(/\t+\n/g, '\n').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
+    const oldContent = cheerio
+          .load(content.replace(/<\/(.*?)>/g, '</$1>\n').replace(/<br??>/g, '<br>\n'))
+          .text()
+          .replace(/\t+\n/g, '\n').replace(/\n+/g, '\n').replace(/\t+/g, '\t').replace(/^\s*$/, '');
 
     const diffDisplay = slackDiff(newContent, oldContent, 'lines');
     const data = JSON.stringify(slackFormat(hostingUrl, scheduleId, schedule, time, latestTime, newContent, diffDisplay));
