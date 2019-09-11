@@ -20,7 +20,7 @@ module.exports = webFetcher;
 const isAlreadyChecked = (schedule) => {
   if(typeof schedule.checkedAt === 'undefined') { return false; }
   let crontab = schedule.schedule;
-  const prev = cronParser.parseExpression('0 * * * *', { tz: 'Asia/Tokyo'}).prev().toDate();
+  const prev = cronParser.parseExpression('* * * * *', { tz: 'Asia/Tokyo'}).prev().toDate();
   const checked = moment(schedule.checkedAt).toDate();
   return (prev < checked);
 };
