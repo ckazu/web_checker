@@ -24,7 +24,6 @@ const crawler = async (uri, selector, fetchAsHtml) => {
       return result.join("\n");
     }
   } catch (err) {
-    console.error(err);
     throw err;
   }
 };
