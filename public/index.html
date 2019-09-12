@@ -21,7 +21,7 @@
 
       <h1>スケジュール一覧</h1>
 
-      <table class="table">
+      <table class="table table-sm">
         <thead>
           <tr>
             <th>スケジュール</th>
@@ -40,6 +40,7 @@
             <td><input type="text" class="form-control uri" placeholder="https://" value="https://"></input></td>
             <td><input type="text" class="form-control selector" placeholder="#hoge, .bar:nth-child(3)"><small class="form-text text-muted">CSS3 Selector 形式。</small></td>
             <td><button id="create-button" class="btn btn-primary">新規追加</button></td>
+          </tr>
         </tbody>
 
         <tbody id="records">
@@ -65,16 +66,20 @@
        const id = schedule.id;
        const scheduleDom = $(`
 <tr id="${id}">
-  <td><input type="text" class="form-control schedule" readonly="readonly" value="${schedule.data().schedule}" data-value="${schedule.data().schedule}"></input>
-  <td><input type="text" class="form-control title"    readonly="readonly" value="${schedule.data().title}"    data-value="${schedule.data().title}"></input></td>
-  <td><input type="text" class="form-control uri"      readonly="readonly" value="${schedule.data().uri}"      data-value="${schedule.data().uri}"></input></td>
-  <td><input type="text" class="form-control selector" readonly="readonly" value="${schedule.data().selector}" data-value="${schedule.data().selector}"></input></td>
+  <td rowspan="2"><input type="text" class="form-control schedule" readonly="readonly" value="${schedule.data().schedule}" data-value="${schedule.data().schedule}"></input>
+  <td rowspan="2"><input type="text" class="form-control title"    readonly="readonly" value="${schedule.data().title}"    data-value="${schedule.data().title}"></input></td>
+  <td rowspan="2"><input type="text" class="form-control uri"      readonly="readonly" value="${schedule.data().uri}"      data-value="${schedule.data().uri}"></input></td>
+  <td rowspan="2"><input type="text" class="form-control selector" readonly="readonly" value="${schedule.data().selector}" data-value="${schedule.data().selector}"></input></td>
   <td><button id="edit-${schedule.id}"   class="edit   btn btn-primary" data-id="${schedule.id}">編集</button>
       <button id="save-${schedule.id}"   class="save   btn btn-primary" data-id="${schedule.id}">保存</button>
       <button id="cancel-${schedule.id}" class="cancel btn btn-light"   data-id="${schedule.id}">x</button>
       <button id="delete-${schedule.id}" class="delete btn btn-danger"  data-id="${schedule.id}">削除</button></td>
   <td><a href="./detail.html?scheduleId=${schedule.id}" class="btn btn-link" role="button">履歴</a></td>
-</tr>`)
+</tr>
+<tr>
+  <td colspan="2" class="text-right"><small class="form-text text-muted">最終チェック日時: ${new Date(schedule.data().checkedAt).toLocaleString()}</small></td>
+</tr>
+       `);
        $('#records').append(scheduleDom);
        $('.save').hide();
        $('.cancel').hide();
