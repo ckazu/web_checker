@@ -93,7 +93,7 @@ const slackFormat = (hostingUrl, scheduleId, schedule, time, latestTime, text, d
         ]
       }, {
         fields: [
-          { title: '更新内容', value: (text.length <= 100 ? text : text.slice(0, 97) + '...'), short: false },
+          { title: '更新内容', value: (text.length <= 200 ? text : text.slice(0, 197) + '...'), short: false },
           { title: '差分', value: diff, short: false }
         ]
       }
