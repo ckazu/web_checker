@@ -13,22 +13,19 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId, hostingUrl) => {
   console.log('crawlerLib: ', schedule.title);
 
   let before = +new Date;
-  let text = await crawler(encodeURI(schedule.uri), schedule.selector, true);
-  if(text === null && (new Date().getHours() == 10)) {
-    const _data = JSON.stringify({
-      attachments: [
-        { title: `[${schedule.title}] でコンテンツが存在しませんでした`,
-          title_link: schedule.uri,
-          color: 'danger',
-          fields: [
-            { title: 'URL', value: schedule.uri },
-            { title: 'セレクタ', value: `\`${schedule.selector}\`` },
-            { title: '管理ページ', value: hostingUrl }
-          ]
-        }]
-    });
-    const _dataBuffer = Buffer.from(_data);
-    return await pubsub.topic('slackNotifier').publish(_dataBuffer);
+  let text = await crawler(encodeURI(schedule.uri), schedule.selector, true)
+      .catch( async err => {
+        console.error('crawlerLib: ', err);
+        await pubsub.topic('slackNotifier').publish(slackErrorFormat(schedule, hostingUrl, err));
+        throw err;
+      });
+
+  if(text === null) {
+    if(new Date().getHours() == 1) {
+      console.error('crawlerLib: no content: ', schedule.title);
+      await pubsub.topic('slackNotifier').publish(slackNoContentErrorFormat(schedule, hostingUrl));
+    }
+    throw new Error(`NoContent: ${schedule.title}`);
   }
 
   const latestArchiveSnapshot = await firestore.collection(`schedules/${scheduleDoc.id}/archives`).orderBy('time', 'desc').limit(1).get();
@@ -99,4 +96,37 @@ const slackFormat = (hostingUrl, scheduleId, schedule, time, latestTime, text, d
       }
     ]
   };
+};
+
+const slackErrorFormat = (schedule, hostingUrl, err) => {
+  const data = JSON.stringify({
+    attachments: [
+      { title: `[${schedule.title}] でエラーが発生しました`,
+        title_link: schedule.uri,
+        color: 'danger',
+        fields: [
+          { title: 'URL', value: schedule.uri },
+          { title: 'セレクタ', value: `\`${schedule.selector}\`` },
+          { title: '管理ページ', value: hostingUrl },
+          { title: 'エラー内容', value: JSON.stringify(err) }
+        ]
+      }]
+  });
+  return Buffer.from(data);
+};
+
+const slackNoContentErrorFormat = (schedule, hostingUrl) => {
+  const data = JSON.stringify({
+    attachments: [
+      { title: `[${schedule.title}] でコンテンツが存在しませんでした`,
+        title_link: schedule.uri,
+        color: 'warning',
+        fields: [
+          { title: 'URL', value: schedule.uri },
+          { title: 'セレクタ', value: `\`${schedule.selector}\`` },
+          { title: '管理ページ', value: hostingUrl }
+        ]
+      }]
+  });
+  return Buffer.from(data);
 };
