@@ -24,6 +24,17 @@ exports.webCrawler = functions.runWith({ memory: "512MB" }).pubsub.topic('webChe
   await webCrawlerLib(firestore, pubsub, scheduleId, HOSTING_URL);
 });
 
+exports.webCrawlerOnWrite = functions.runWith({ memory: "512MB" }).firestore.document('schedules/{scheduleID}').onWrite(async (change, context) => {
+  if(change.after.data()) {
+    if((typeof change.before.data() == 'undefined') ||
+       (change.before.data().uri != change.after.data().uri) ||
+       (change.before.data().selector != change.after.data().selector)) {
+      const scheduleId = context.params.scheduleID;
+      await webCrawlerLib(firestore, pubsub, scheduleId, HOSTING_URL);
+    }
+  }
+});
+
 exports.slackNotifier = functions.pubsub.topic('slackNotifier').onPublish(async (message) => {
   await slackNotifierLib(slack, message.json);
 });
