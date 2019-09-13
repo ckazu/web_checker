@@ -28,29 +28,26 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId, hostingUrl) => {
     throw new Error(`NoContent: ${schedule.title}`);
   }
 
-  const latestArchiveSnapshot = await firestore.collection(`schedules/${scheduleDoc.id}/archives`).orderBy('time', 'desc').limit(1).get();
-
   let latestArchive;
+  const latestArchiveSnapshot = await firestore.collection(`schedules/${scheduleDoc.id}/archives`).orderBy('time', 'desc').limit(1).get();
   latestArchiveSnapshot.forEach(archive => { latestArchive = archive.data(); });
 
-  let diff;
-  if(latestArchive) { diff = slackDiff(text, latestArchive.content, 'chars'); }
-
-  if(diff == '') {
-    console.log('no diff: ', schedule.title);
-  } else {
+  if((typeof latestArchive === 'undefined') || text != latestArchive.content) {
     const time = new Date();
-    let latestTime = '-';
-    if(latestArchive) { latestTime = moment(latestArchive.time).tz('Asia/Tokyo').format(); }
 
+    let latestTime = '-';
+    let content = '';
+    if(latestArchive) {
+      latestTime = moment(latestArchive.time).tz('Asia/Tokyo').format();
+      content = latestArchive.content;
+    }
     await firestore.collection(`schedules/${scheduleDoc.id}/archives`).add({ content: text, time: +time });
 
-    let content = '';
-    if(latestArchive) { content = latestArchive.content; }
     const newContent = cheerio
           .load(text.replace(/<\/(.*?)>/g, '</$1>\n').replace(/<br??>/g, '<br>\n'))
           .text()
           .replace(/[\t| |　]+/g, ' ').replace(/\s+\n/g, '\n');
+
     const oldContent = cheerio
           .load(content.replace(/<\/(.*?)>/g, '</$1>\n').replace(/<br??>/g, '<br>\n'))
           .text()
@@ -61,7 +58,10 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId, hostingUrl) => {
     const dataBuffer = Buffer.from(data);
     await pubsub.topic('slackNotifier').publish(dataBuffer);
     console.log('publish slackNotifier: ', schedule.title);
+  } else {
+    console.log('no diff: ', schedule.title);
   }
+
   return await scheduleRef.set({ checkedAt: +new Date }, { merge: true });
 };
 
