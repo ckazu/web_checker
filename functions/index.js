@@ -19,7 +19,7 @@ exports.webFetcher = functions.pubsub.schedule('5 * * * *').onRun(async (context
   await webFetcherLib(firestore, pubsub);
 });
 
-exports.webCrawler = functions.pubsub.topic('webChecker').onPublish(async (message) => {
+exports.webCrawler = functions.runWith({ memory: "512MB" }).pubsub.topic('webChecker').onPublish(async (message) => {
   const scheduleId = message.json.scheduleId;
   await webCrawlerLib(firestore, pubsub, scheduleId, HOSTING_URL);
 });
