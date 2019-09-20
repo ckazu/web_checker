@@ -15,16 +15,21 @@ const webFetcherLib = require('./webFetcher');
 const authUserLib = require('./userAuth');
 const slackNotifierLib = require('./slackNotifier');
 
-exports.webFetcher = functions.pubsub.schedule('5 * * * *').onRun(async (context) => {
+const memorySettingWith1GB =   { timeoutSeconds: 300, memory: "1GB" };
+const memorySettingWith512MB = { timeoutSeconds: 300, memory: "512MB" };
+const memorySettingWith256MB = { timeoutSeconds: 300, memory: "256MB" };
+const memorySettingWith128MB = { timeoutSeconds: 300, memory: "128MB" };
+
+exports.webFetcher = functions.runWith(memorySettingWith128MB).pubsub.schedule('5 * * * *').onRun(async (context) => {
   await webFetcherLib(firestore, pubsub);
 });
 
-exports.webCrawler = functions.runWith({ memory: "512MB" }).pubsub.topic('webChecker').onPublish(async (message) => {
+exports.webCrawler = functions.runWith(memorySettingWith256MB).pubsub.topic('webChecker').onPublish(async (message) => {
   const scheduleId = message.json.scheduleId;
   await webCrawlerLib(firestore, pubsub, scheduleId, HOSTING_URL);
 });
 
-exports.webCrawlerOnWrite = functions.runWith({ memory: "512MB" }).firestore.document('schedules/{scheduleID}').onWrite(async (change, context) => {
+exports.webCrawlerOnWrite = functions.runWith(memorySettingWith256MB).firestore.document('schedules/{scheduleID}').onWrite(async (change, context) => {
   if(change.after.data()) {
     if((typeof change.before.data() == 'undefined') ||
        (change.before.data().uri != change.after.data().uri) ||
@@ -35,10 +40,10 @@ exports.webCrawlerOnWrite = functions.runWith({ memory: "512MB" }).firestore.doc
   }
 });
 
-exports.slackNotifier = functions.pubsub.topic('slackNotifier').onPublish(async (message) => {
+exports.slackNotifier = functions.runWith(memorySettingWith128MB).pubsub.topic('slackNotifier').onPublish(async (message) => {
   await slackNotifierLib(slack, message.json);
 });
 
-exports.sendWelcomeEmail = functions.auth.user().onCreate(async (user) => {
+exports.sendWelcomeEmail = functions.runWith(memorySettingWith128MB).auth.user().onCreate(async (user) => {
   await authUserLib(admin, pubsub, user);
 });
