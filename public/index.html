@@ -28,6 +28,7 @@
             <th>タイトル</th>
             <th>URL</th>
             <th>セレクタ</th>
+            <th>通知先</th>
             <th>編集</th>
             <th>詳細</th>
           </tr>
@@ -39,6 +40,7 @@
             <td><input type="text" class="form-control title"></input></td>
             <td><input type="text" class="form-control uri" placeholder="https://" value="https://"></input></td>
             <td><input type="text" class="form-control selector" placeholder="#hoge, .bar:nth-child(3)"><small class="form-text text-muted">CSS3 Selector 形式。</small></td>
+            <td><input type="text" class="form-control slack" placeholder="#slack"></input><small class="form-text text-muted">Slack の通知先チャネル名。空白可</small></td>
             <td><button id="create-button" class="btn btn-primary">新規追加</button></td>
           </tr>
         </tbody>
@@ -70,6 +72,7 @@
   <td rowspan="2"><input type="text" class="form-control title"    readonly="readonly" value="${schedule.data().title}"    data-value="${schedule.data().title}"></input></td>
   <td rowspan="2"><input type="text" class="form-control uri"      readonly="readonly" value="${schedule.data().uri}"      data-value="${schedule.data().uri}"></input></td>
   <td rowspan="2"><input type="text" class="form-control selector" readonly="readonly" value="${schedule.data().selector}" data-value="${schedule.data().selector}"></input></td>
+  <td rowspan="2"><input type="text" class="form-control slack"    readonly="readonly" value="${schedule.data().slack || ''}"    data-value="${schedule.data().slack || ''}"></input></td>
   <td><button id="edit-${schedule.id}"   class="edit   btn btn-primary" data-id="${schedule.id}">編集</button>
       <button id="save-${schedule.id}"   class="save   btn btn-primary" data-id="${schedule.id}">保存</button>
       <button id="cancel-${schedule.id}" class="cancel btn btn-light"   data-id="${schedule.id}">x</button>
@@ -101,12 +104,14 @@
            schedule: $(`#${id} .schedule`).val(),
            uri: $(`#${id} .uri`).val(),
            title: $(`#${id} .title`).val(),
-           selector: $(`#${id} .selector`).val()
+           selector: $(`#${id} .selector`).val(),
+           slack: $(`#${id} .slack`).val()
          }, { merge: true }).then(() => {
            $(`#${id} .schedule`).data('value', $(`#${id} .schedule`).val()),
            $(`#${id} .title`).data('value', $(`#${id} .title`).val()),
            $(`#${id} .uri`).data('value', $(`#${id} .uri`).val()),
            $(`#${id} .selector`).data('value', $(`#${id} .selector`).val()),
+           $(`#${id} .slack`).data('value', $(`#${id} .slack`).val()),
 
            $(`#${id} input`).prop('readonly', true);
            $(`button.edit`).prop('disabled', false);
@@ -154,6 +159,7 @@
          const _uri = $('#create .uri').val();
          const _title = $('#create .title').val();
          const _selector = $('#create .selector').val();
+         const _slack = $('#create .slack').val() || '';
 
          if(!(_schedule.match(/^.*\s.*\s.*\s.*\s.*$/) && _title && _uri.match(/^http(s)?:\/\/.+$/) && _selector)) {
            $('#loading').show().fadeOut();
@@ -166,6 +172,7 @@
            uri: _uri,
            title: _title,
            selector: _selector,
+           slack: _slack,
            createdAt: +new Date(),
            checkedAt: +new Date()
          }).then(() => {
