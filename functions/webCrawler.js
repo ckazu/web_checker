@@ -54,9 +54,8 @@ const webCrawlerLib = async (firestore, pubsub, scheduleId, hostingUrl) => {
           .replace(/[\t| |　]+/g, ' ').replace(/\s+\n/g, '\n');
 
     const diffDisplay = slackDiff(newContent, oldContent, 'lines');
-    const data = JSON.stringify(slackFormat(hostingUrl, scheduleId, schedule, time, latestTime, newContent, diffDisplay));
-    const dataBuffer = Buffer.from(data);
-    await pubsub.topic('slackNotifier').publish(dataBuffer);
+    const data = slackFormat(hostingUrl, scheduleId, schedule, time, latestTime, newContent, diffDisplay);
+    await pubsub.topic('slackNotifier').publish(data);
     console.log('publish slackNotifier: ', schedule.title);
   } else {
     console.log('no diff: ', schedule.title);
@@ -76,7 +75,7 @@ const slackFormat = (hostingUrl, scheduleId, schedule, time, latestTime, text, d
     titleText = `[${schedule.title}] で更新が検知されました`;
   }
 
-  return {
+  let data = {
     attachments: [
       {
         title: titleText,
@@ -96,10 +95,12 @@ const slackFormat = (hostingUrl, scheduleId, schedule, time, latestTime, text, d
       }
     ]
   };
+  if(typeof schedule.slack !== 'undefined') { data['channel'] = schedule.slack; };
+  return Buffer.from(JSON.stringify(data));
 };
 
 const slackErrorFormat = (schedule, hostingUrl, err) => {
-  const data = JSON.stringify({
+  let data = {
     attachments: [
       { title: `[${schedule.title}] でエラーが発生しました`,
         title_link: schedule.uri,
@@ -111,12 +112,13 @@ const slackErrorFormat = (schedule, hostingUrl, err) => {
           { title: 'エラー内容', value: JSON.stringify(err) }
         ]
       }]
-  });
-  return Buffer.from(data);
+  };
+  if(typeof schedule.slack !== 'undefined') { data['channel'] = schedule.slack; };
+  return Buffer.from(JSON.stringify(data));
 };
 
 const slackNoContentErrorFormat = (schedule, hostingUrl) => {
-  const data = JSON.stringify({
+  let data = {
     attachments: [
       { title: `[${schedule.title}] でコンテンツが存在しませんでした`,
         title_link: schedule.uri,
@@ -127,6 +129,7 @@ const slackNoContentErrorFormat = (schedule, hostingUrl) => {
           { title: '管理ページ', value: hostingUrl }
         ]
       }]
-  });
-  return Buffer.from(data);
+  };
+  if(typeof schedule.slack !== 'undefined') { data['channel'] = schedule.slack; };
+  return Buffer.from(JSON.stringify(data));
 };

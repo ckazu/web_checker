@@ -1,5 +1,5 @@
 const slackNotifierLib = async (slack, message) => {
-  console.log('send to slack');
+  console.log('send to slack', message);
   slack.send(message);
 };
 
