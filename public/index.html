@@ -105,7 +105,8 @@
            uri: $(`#${id} .uri`).val(),
            title: $(`#${id} .title`).val(),
            selector: $(`#${id} .selector`).val(),
-           slack: $(`#${id} .slack`).val()
+           slack: $(`#${id} .slack`).val(),
+           updatedUser: firebase.auth().currentUser.email,
          }, { merge: true }).then(() => {
            $(`#${id} .schedule`).data('value', $(`#${id} .schedule`).val()),
            $(`#${id} .title`).data('value', $(`#${id} .title`).val()),
@@ -173,6 +174,7 @@
            title: _title,
            selector: _selector,
            slack: _slack,
+           createdUser: firebase.auth().currentUser.email,
            createdAt: +new Date(),
            checkedAt: +new Date()
          }).then(() => {
