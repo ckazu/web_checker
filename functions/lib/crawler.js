@@ -1,3 +1,5 @@
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
+
 const cheerio = require('cheerio');
 const rp = require('promise-request-retry');
 
