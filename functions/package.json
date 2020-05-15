@@ -21,6 +21,7 @@
     "diff": "^4.0.1",
     "firebase-admin": "^8.3.0",
     "firebase-functions": "^3.1.0",
+    "jschardet": "^2.1.1",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
     "promise-request-retry": "^1.0.1",
